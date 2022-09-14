@@ -1,0 +1,26 @@
+name: 'Firebase'
+description: 'Sets up firebase tools'
+inputs:
+  serviceAccount:
+    description: 'Service account json file to use for authentication'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Cache firebase binary
+      id: firebase-cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          /usr/local/bin/firebase
+          ~/.cache/firebase/tools
+        key: ${{ runner.os }}-firebase-tools-${{ hashFiles('/usr/local/bin/firebase') }}
+        restore-keys: ${{ runner.os }}-firebase-tools-
+    - name: Install firebase-tools
+      run: curl -sL firebase.tools | analytics=false upgrade=true bash
+      shell: bash
+    - name: Set service account
+      run: |
+        echo '${{ inputs.serviceAccount }}' > $GITHUB_WORKSPACE/.firebase_service_account.json
+        echo GOOGLE_APPLICATION_CREDENTIALS=$GITHUB_WORKSPACE/.firebase_service_account.json >> $GITHUB_ENV
+      shell: bash
