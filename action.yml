@@ -14,10 +14,16 @@ runs:
         path: |
           /usr/local/bin/firebase
           ~/.cache/firebase/tools
-        key: ${{ runner.os }}-firebase-tools-${{ hashFiles('/usr/local/bin/firebase') }}
+        key: ${{ runner.os }}-firebase-tools-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-firebase-tools-
     - name: Install firebase-tools
-      run: curl -sL firebase.tools | analytics=false upgrade=true bash
+      run: curl -sL firebase.tools | analytics=false bash
+      shell: bash
+    - name: Update firebase-tools
+      run: |
+        if [ `firebase is:npm view firebase-tools version` != `firebase --version` ]; then
+          curl -sL firebase.tools | analytics=false upgrade=true bash
+        fi
       shell: bash
     - name: Set service account
       run: |
