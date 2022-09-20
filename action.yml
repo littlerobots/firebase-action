@@ -27,6 +27,6 @@ runs:
       shell: bash
     - name: Set service account
       run: |
-        echo '${{ inputs.serviceAccount }}' > $GITHUB_WORKSPACE/.firebase_service_account.json
-        echo GOOGLE_APPLICATION_CREDENTIALS=$GITHUB_WORKSPACE/.firebase_service_account.json >> $GITHUB_ENV
+        echo '${{ inputs.serviceAccount }}' > $RUNNER_TEMP/.firebase_service_account.json
+        echo GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/.firebase_service_account.json >> $GITHUB_ENV
       shell: bash
