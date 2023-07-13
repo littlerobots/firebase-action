@@ -25,6 +25,7 @@ runs:
       id: checkIsNpm
       run: |
         firebase is:npm > /dev/null 2> /dev/null
+      shell: bash
     - name: Update firebase-tools with version check
       if: steps.checkIsNpm.outcome == 'sucess'
       run: |
