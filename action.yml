@@ -22,7 +22,7 @@ runs:
       shell: bash
     - name: Update firebase-tools
       run: |
-        if [ `firebase is:npm view firebase-tools version` != `firebase --version` ]; then
+        if [ `firebase is:npm view firebase-tools version --userconfig=$RUNNER_TEMP/dummynpmrc` != `firebase --version` ]; then
           curl -sL firebase.tools | analytics=false upgrade=true bash
         fi
       shell: bash
