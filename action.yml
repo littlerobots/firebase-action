@@ -1,10 +1,10 @@
-name: 'Firebase'
-description: 'Sets up firebase tools'
+name: "Firebase"
+description: "Sets up firebase tools"
 inputs:
   serviceAccount:
-    description: 'Service account json file to use for authentication'
+    description: "Service account json file to use for authentication"
     required: false
-    default: ''
+    default: ""
 runs:
   using: "composite"
   steps:
@@ -20,11 +20,22 @@ runs:
     - name: Install firebase-tools
       run: curl -sL firebase.tools | analytics=false bash
       shell: bash
-    - name: Update firebase-tools
+    - name: Check tools embedded npm
+      continue-on-error: true
+      id: checkIsNpm
       run: |
-        if [ `firebase is:npm view firebase-tools version --userconfig=$RUNNER_TEMP/dummynpmrc` != `firebase --version` ]; then
+        firebase is:npm > /dev/null 2> /dev/null
+    - name: Update firebase-tools with version check
+      if: steps.checkIsNpm.outcome == 'sucess'
+      run: |
+        if [ `firebase is:npm view firebase-tools version` != `firebase --version` ]; then
           curl -sL firebase.tools | analytics=false upgrade=true bash
         fi
+      shell: bash
+    - name: Force update firebase-tools
+      if: steps.checkIsNpm.outcome == 'failure'
+      run: |
+        curl -sL firebase.tools | analytics=false upgrade=true bash
       shell: bash
     - name: Set service account
       if: "${{ inputs.serviceAccount != '' }}"
