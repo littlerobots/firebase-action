@@ -37,6 +37,19 @@ runs:
       if: steps.checkIsNpm.outcome == 'failure'
       run: |
         curl -sL firebase.tools | analytics=false upgrade=true bash
+        if [ `firebase --version` == "12.4.4" ]; then
+          echo !!! Downgrading broken 12.4.4 version to 12.4.3
+          UNAME=$(uname -s | tr '[:upper:]' '[:lower:]')
+          case "$UNAME" in
+               linux*)     MACHINE=linux;;
+               darwin*)    MACHINE=macos;;
+          esac
+          INSTALL_DIR="/usr/local/bin"
+          DOWNLOAD_URL="https://firebase.tools/bin/$MACHINE/v12.4.3"
+          echo "-- Downloading binary from $DOWNLOAD_URL"
+          sudo curl -o "$INSTALL_DIR/firebase" -L --progress-bar $DOWNLOAD_URL
+          sudo chmod +rx "$INSTALL_DIR/firebase"
+        fi
       shell: bash
     - name: Set service account
       if: "${{ inputs.serviceAccount != '' }}"
