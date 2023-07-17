@@ -5,6 +5,10 @@ inputs:
     description: "Service account json file to use for authentication"
     required: false
     default: ""
+  version:
+    description: "The version to install, e.g. 12.4.3, blank for latest"
+    required: false
+    default: ""
 runs:
   using: "composite"
   steps:
@@ -18,37 +22,29 @@ runs:
         key: ${{ runner.os }}-firebase-tools-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-firebase-tools-
     - name: Install firebase-tools
-      run: curl -sL firebase.tools | analytics=false bash
-      shell: bash
-    - name: Check tools embedded npm
-      continue-on-error: true
-      id: checkIsNpm
+      if: steps.firebase-cache.outputs.cache-hit != 'true'
+      env:
+        TOOLS_VERSION: ${{ inputs.version }}
       run: |
-        firebase is:npm > /dev/null 2> /dev/null
-      shell: bash
-    - name: Update firebase-tools with version check
-      if: steps.checkIsNpm.outcome == 'sucess'
-      run: |
-        if [ `firebase is:npm view firebase-tools version` != `firebase --version` ]; then
+        if [ "$TOOLS_VERSION" == "" ]; then
           curl -sL firebase.tools | analytics=false upgrade=true bash
+        else        
+          curl -sL firebase.tools | sed "s/\/\$MACHINE\/latest/\/\$MACHINE\/v$TOOLS_VERSION/g" | analytics=false upgrade=true bash
         fi
       shell: bash
-    - name: Force update firebase-tools
-      if: steps.checkIsNpm.outcome == 'failure'
+    - name: Update firebase-tools
+      if: steps.firebase-cache.outputs.cache-hit == 'true'
+      env:
+        TOOLS_VERSION: ${{ inputs.version }}
       run: |
-        curl -sL firebase.tools | analytics=false upgrade=true bash
-        if [ `firebase --version` == "12.4.4" ]; then
-          echo !!! Downgrading broken 12.4.4 version to 12.4.3
-          UNAME=$(uname -s | tr '[:upper:]' '[:lower:]')
-          case "$UNAME" in
-               linux*)     MACHINE=linux;;
-               darwin*)    MACHINE=macos;;
-          esac
-          INSTALL_DIR="/usr/local/bin"
-          DOWNLOAD_URL="https://firebase.tools/bin/$MACHINE/v12.4.3"
-          echo "-- Downloading binary from $DOWNLOAD_URL"
-          sudo curl -o "$INSTALL_DIR/firebase" -L --progress-bar $DOWNLOAD_URL
-          sudo chmod +rx "$INSTALL_DIR/firebase"
+        if [ "$TOOLS_VERSION" == "" ]; then
+          if [ `firebase is:npm view firebase-tools version` != `firebase --version` ]; then
+            curl -sL firebase.tools | analytics=false upgrade=true bash
+          fi
+        else
+          if [ "$TOOLS_VERSION" != `firebase --version` ]; then
+             curl -sL firebase.tools | sed "s/\/\$MACHINE\/latest/\/\$MACHINE\/v$TOOLS_VERSION/g" | analytics=false upgrade=true bash
+          fi
         fi
       shell: bash
     - name: Set service account

@@ -6,6 +6,8 @@ the credentials by way of a service account. This does not require nodejs or npm
 The result of installing the `firebase` command will be cached to speed up next workflow runs. The action will check if the latest version of `firebase`
 is installed, and upgrade if this is not the case. Sending analytics is disabled using the `analytics=false` option.
 
+The version of `firebase-tools` can also be specified, and the action will make sure that version is installed.
+
 ## How to use in your workflow
 
 Include the action, passing the json service account secret (just paste the json text as a Github Actions secret).
@@ -15,6 +17,8 @@ The `serviceAccount` parameter can be omitted, for example if you are using the 
         uses: littlerobots/firebase-action@v1
         with:
           serviceAccount: ${{ secrets.MY_FIREBASE_SERVICE_ACCOUNT }}
+          # optional version, defaults to latest version
+          version: 12.4.3
           
      # somewhere later in your workflow access the installed firebase tool
       
