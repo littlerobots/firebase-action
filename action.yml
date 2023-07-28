@@ -22,28 +22,35 @@ runs:
         key: ${{ runner.os }}-firebase-tools-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-firebase-tools-
     - name: Install firebase-tools
-      if: steps.firebase-cache.outputs.cache-hit != 'true'
       env:
         TOOLS_VERSION: ${{ inputs.version }}
       run: |
+        function get_firebase () {
+          if [ "$2" == "" ]; then
+            curl -sL firebase.tools | analytics=false upgrade=$1 bash
+          else        
+            curl -sL firebase.tools | sed "s/\/\$MACHINE\/latest/\/\$MACHINE\/v$2/g" | analytics=false upgrade=$1 bash
+          fi
+        }
+
+        get_firebase false $TOOLS_VERSION
+
+        echo -n Checking installed version...
         if [ "$TOOLS_VERSION" == "" ]; then
-          curl -sL firebase.tools | analytics=false upgrade=true bash
-        else        
-          curl -sL firebase.tools | sed "s/\/\$MACHINE\/latest/\/\$MACHINE\/v$TOOLS_VERSION/g" | analytics=false upgrade=true bash
-        fi
-      shell: bash
-    - name: Update firebase-tools
-      if: steps.firebase-cache.outputs.cache-hit == 'true'
-      env:
-        TOOLS_VERSION: ${{ inputs.version }}
-      run: |
-        if [ "$TOOLS_VERSION" == "" ]; then
+          # Check if the installed version is the latest version
           if [ `firebase is:npm view firebase-tools version` != `firebase --version` ]; then
-            curl -sL firebase.tools | analytics=false upgrade=true bash
+            echo getting latest version.
+            get_firebase true
+          else
+            echo latest version is installed.
           fi
         else
-          if [ "$TOOLS_VERSION" != `firebase --version` ]; then
-             curl -sL firebase.tools | sed "s/\/\$MACHINE\/latest/\/\$MACHINE\/v$TOOLS_VERSION/g" | analytics=false upgrade=true bash
+          # Check if the installed version is the version we want
+          if [ `firebase --version` != "$TOOLS_VERSION" ]; then
+            echo install version $TOOLS_VERSION.
+            get_firebase true $TOOLS_VERSION
+          else 
+            echo version $TOOLS_VERSION is installed.
           fi
         fi
       shell: bash
