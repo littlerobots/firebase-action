@@ -14,7 +14,7 @@ runs:
   steps:
     - name: Cache firebase binary
       id: firebase-cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           /usr/local/bin/firebase
